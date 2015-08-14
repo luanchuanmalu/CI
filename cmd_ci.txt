@@ -1,0 +1,215 @@
+------------------------Install Jenkins---------------
+#http://pkg.jenkins-ci.org/redhat/
+sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+sudo rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key
+yum install jenkins
+
+yum install java-1.7.0-openjdk
+
+用户列表文件：/etc/passwd
+用户组列表文件：/etc/group
+
+/etc/sudoers
+# User privilege specification jenkins 权限配置
+root    ALL=(ALL:ALL) ALL
+jenkins ALL=(ALL:ALL) ALL
+usermod -G docker jenkins
+
+
+firewall-cmd --zone=public --add-port=8080/tcp --permanent
+firewall-cmd --zone=public --add-port=8089/tcp --permanent
+firewall-cmd --reload
+
+修改Jenkins配置端口到8088
+/etc/sysconfig
+JENKINS_PORT="8088"
+
+sudo /etc/init.d/jenkins restart
+systemctl restart jenkins.service
+
+Jenkins更新插件被墙http://192.168.93.144:8080/pluginManager/available，用下面的源
+http://mirror.xmission.com/jenkins/updates/update-center.json
+
+yum install git
+
+安装一些必要的插件SCM Sync Configuration Plugin ，GitHub plugin ，GIT plugin ，GIT client plugin ,安装结束后重启jenkins.
+----------------------------------------------------------------------------------
+yum install docker-registry
+
+service docker-registry start
+service docker-registry stop
+firewall-cmd --zone=public --add-port=5000/tcp --permanent
+firewall-cmd --reload
+systemctl restart docker-registry
+
+--------------------------------------------------------
+
+docker run -d -p 5000:5000 registry:2.0
+docker tag hello-world:latest 120.0.0.1:5000/hello-world:latest
+ docker tag d2a0 192.168.93.144:5000/test
+ 
+ docker --insecure-registry 192.168.93.144:5000 push 192.168.93.144:5000/test 
+ 
+docker rm -f xxx
+ 
+docker tag ubuntu 192.168.93.144:5000/yang/ubuntu
+docker push 192.168.93.144:5000/batman/ubuntu
+--------------------------------------------------------------------------------------------------------
+坑：把这个加到/etc/sysconfig/docker, 如果参数不对，参考/lib/systemd/system/docker.service里面启动的说明ExecStart
+INSECURE_REGISTRY="--insecure-registry 192.168.93.144:5000"
+-----------------------------------------------------------------------------------------------------------------
+
+
+
+
+docker tag 192.168.93.144:5000/yang/ubuntu 192.168.93.144:5000/yang/ubuntu:v2
+docker push 192.168.93.144:5000/yang/ubuntu:v2
+
+
+docker build -t="192.168.93.144:5000/yang/test:v$BUILD_NUMBER" /var/lib/jenkins/jobs/yangtest/workspace
+docker push 192.168.93.144:5000/yang/test:v$BUILD_NUMBER
+
+docker tag 192.168.93.144:5000/yang/test:v$BUILD_NUMBER 192.168.93.144:5000/yang/test:latest
+docker push 192.168.93.144:5000/yang/test:latest
+
+-----client------------------------------
+docker pull 192.168.93.144:5000/yang/test
+docker run -t -i 192.168.93.144:5000/yang/test bash
+docker run --name test -d -p 8080:80 192.168.93.144:5000/yang/test
+
+cat /var/www/website/index.html
+cat /usr/share/nginx/html/index.html
+
+192.168.93.144:5000/yang/nginx:v1
+docker push 192.168.93.144:5000/yang/nginx:v1
+docker tag 192.168.93.144:5000/yang/nginx:v1 192.168.93.144:5000/yang/nginx:latest
+docker push 192.168.93.144:5000/yang/nginx:latest
+
+
+
+kubectl create -f /tmp/citest/pod1.json
+
+kubectl create -f /tmp/citest/service.json
+------------------------------------------------------------------------------
+创建正式的双RC测试机制
+kubectl create -f /tmp/citest/mongopod1.json
+kubectl create -f /tmp/citest/mongopod1-service.json
+
+kubectl create -f /tmp/citest/guestbook-controller.json
+kubectl create -f /tmp/citest/guestbook-service.json
+
+kubectl create -f /tmp/citest/hello-controller1.json
+kubectl create -f /tmp/citest/hello-controller2.json
+kubectl create -f /tmp/citest/hello-service.json
+
+kubectl scale --replicas=1 replicationcontrollers hellogroupa
+kubectl scale --replicas=10 replicationcontrollers hellogroupb
+
+
+kubectl scale --replicas=2 replicationcontrollers guestbook
+
+docker exec -it addf6e511bdf /bin/sh
+docker exec -it 5c338ba8aba5 /bin/sh
+cat /usr/share/nginx/html/index.html
+
+ip link set dev docker0 down
+ip link set dev veth83ea8fe down
+ip link set dev veth2fda665 down
+ip link del dev veth83ea8fe
+ip link del dev veth2fda665
+ip link del dev docker0
+ip link set dev kbr0 up
+
+ip link set dev veth212bc0a down
+ip link del dev veth212bc0a
+
+ip link set dev veth8a508e2 down
+ip link del dev veth8a508e2
+-------------------------------------------------------
+# /etc/sysconfig/docker
+
+# Modify these options if you want to change the way the docker daemon runs
+OPTIONS='--selinux-enabled -b=kbr0'
+
+systemctl restart network
+systemctl restart docker
+
+kubectl describe svc guestbook 
+
+iptables-save |grep guestbook
+
+-----------------------------------------------------------
+docker load --input /tmp/DockerImages/ngnix.tar
+
+curl 10.254.0.228
+kubectl scale --replicas=5 replicationcontrollers hellogroupb;
+
+ test=$(kubectl get rc | grep "hellogroupb" | tail -c 2)
+ rcgroupbNumber=$(kubectl get rc | grep "hellogroupb" | tail -c 3)
+ rcgroupbNumber=$(kubectl get rc | grep "hellogroupb" | tail -c 3)
+ 
+ echo $rcgroupbNumber
+ echo $rcgroupbNumber
+ 
+kubectl scale --replicas=5 replicationcontrollers hellogroupb;
+kubectl scale --replicas=0 replicationcontrollers hellogroupb;
+--------------------------------------------------------------------------------------
+
+sh /tmp/JenkinsScript/test.sh
+-----------------------------------------------------------------------------------------------
+sh /tmp/JenkinsScript/RCNewDeploy.sh
+sh /tmp/JenkinsScript/RCDeploy.sh
+sh /tmp/JenkinsScript/RCReset.sh
+
+
+sh /tmp/JenkinsScript/RCA2B.sh
+sh /tmp/JenkinsScript/test.sh
+
+
+echo "Start test"
+
+sh /tmp/JenkinsScript/RCNewDeploy_tmp.sh 2
+
+tmpFile="/tmp/jenkins/tmp_RCA2B.txt"
+if [ -f "$tmpFile" ]
+then 
+	RESULT=$(cat /tmp/jenkins/tmp_RCA2B.txt)
+	echo $RESULT
+fi
+echo "End test"
+
+
+
+
+
+
+
+
+# B2A
+rcTag=0  #1 A2B; 2 B2A
+rcNum=0  #move number
+rcFinishNum=0
+rcTotalNum=0 #move total number
+#Initial other by kubes
+rcGroupANumber=0
+rcGroupBNumber=0
+rcGroupANumber=$(kubectl get rc | grep "hellogroupa" | tail -c 3)
+rcGroupBNumber=$(kubectl get rc | grep "hellogroupb" | tail -c 3)
+let rcTag=1
+let rcTotalNum=rcGroupBNumber
+let rcNum=rcGroupBNumber
+#Write the RCDeploy.txt
+sh /tmp/JenkinsScript/Deploy_tmp.sh $rcTag $rcNum $rcFinishNum $rcTotalNum
+sleep 5
+sh /tmp/JenkinsScript/RCDeploy.sh
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,30 @@
+cd /tmp/JenkinsScript
+sh DockerRCDeploy.sh
+
+rcNum=0;
+rcMasterNumber=0;
+rcSlaveNumber=0;
+rcMasterNumber=$(kubectl get rc | grep "hellomaster" | tail -c 3);
+rcSlaveNumber=$(kubectl get rc | grep "helloslave" | tail -c 3);
+
+echo "MasterRC=$rcMasterNumber or SlaveRC=$rcSlaveNumber";
+if((($rcMasterNumber)&&($rcSlaveNumber))); then
+  echo "MasterRC=$rcMasterNumber or SlaveRC=$rcSlaveNumber not clean";
+  echo "Deploy check failed";
+  exit -1;
+else
+    echo "Deploy check successfully pass!";
+fi;
+
+
+
+tmpPath="/tmp/jenkins/"
+if [ ! -x "$tmpPath"]; then  
+mkdir "$tmpPath"
+fi 
+echo group="Master$BUILD_NUMBER">/tmp/jenkins/rcgroup.txt
+
+tmpFile="/tmp/jenkins/rcgroup.txt"
+if [ ! -f "$tmpFile" ]; then  
+#touch "$tmpFile"  
+fi  
