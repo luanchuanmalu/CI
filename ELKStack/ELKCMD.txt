@@ -1,0 +1,8 @@
+docker run -d  --name yang-elasticsearch -p 9200:9200 -v /srv/elasticsearchdata:/usr/share/elasticsearch/data elasticsearch
+
+docker run -it --rm logstash logstash -e 'input { stdin { } } output { stdout { } }'
+docker run -d -v /var/log/nginx:/nginxlog -v /srv/logstash-conf:/config-dir logstash logstash -f /config-dir/logstash.conf
+
+curl -XGET '192.168.93.141:9200/logstash-2015.09.15/_search?q=response=304'
+
+docker run --name yang-kibana --link yang-elasticsearch:elasticsearch -p 5601:5601 -d kibana
